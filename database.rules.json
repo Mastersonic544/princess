@@ -1,0 +1,46 @@
+{
+    "rules": {
+        "quotes": {
+            ".read": true,
+            ".write": "auth !== null",
+            "$quoteId": {
+                ".validate": "newData.hasChildren(['text', 'type', 'createdAt', 'likes', 'visible'])",
+                "likes": {
+                    ".write": true,
+                    ".validate": "newData.isNumber()"
+                },
+                "savedBy": {
+                    ".write": true,
+                    ".validate": "newData.val() === 'user_like'"
+                }
+            }
+        },
+        "sessions": {
+            "$sessionId": {
+                ".read": "auth !== null",
+                ".write": true,
+                ".validate": "newData.hasChildren(['sessionId', 'startedAt', 'lastSeen']) && newData.child('sessionId').isString() && newData.child('startedAt').isNumber() && newData.child('lastSeen').isNumber()",
+                "scrollCount": {
+                    ".validate": "!newData.exists() || newData.isNumber()"
+                },
+                "likeCount": {
+                    ".validate": "!newData.exists() || newData.isNumber()"
+                },
+                "durationSeconds": {
+                    ".validate": "!newData.exists() || newData.isNumber()"
+                },
+                "$other": {
+                    ".validate": false
+                }
+            }
+        },
+        "stats": {
+            ".read": true,
+            ".write": true,
+            ".validate": "newData.hasChildren(['totalUsers'])",
+            "$stat": {
+                ".validate": "newData.isNumber()"
+            }
+        }
+    }
+}

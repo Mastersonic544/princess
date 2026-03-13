@@ -1,0 +1,107 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Global reset & dark theme */
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    height: 100%;
+    background-color: #0a0a0a;
+    color: #f5f5f5;
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    height: 100%;
+    overflow: hidden; /* Feed handles its own scroll */
+    background-color: #0a0a0a;
+  }
+
+  #root {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Hide scrollbar globally */
+  * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer utilities {
+  /* Feed snap scroll container */
+  .feed-container {
+    height: 100dvh;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Each card snaps to full viewport */
+  .feed-card-snap {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    height: 100dvh;
+    width: 100vw;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Quote text style */
+  .quote-text {
+    font-family: 'Playfair Display', Georgia, serif;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7), 0 1px 3px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Top accent bar */
+  .quote-bar-manual {
+    background-color: #3b82f6;
+  }
+  .quote-bar-ai {
+    background-color: #ef4444;
+  }
+
+  /* Reaction button pulse on tap */
+  .reaction-tap {
+    animation: reactionPop 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+  }
+
+  @keyframes reactionPop {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.4); }
+    70%  { transform: scale(0.9); }
+    100% { transform: scale(1); }
+  }
+
+  /* Skeleton shimmer */
+  .skeleton-shimmer {
+    background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Pink glow for admin/interactive elements */
+  .pink-glow {
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.3);
+  }
+}

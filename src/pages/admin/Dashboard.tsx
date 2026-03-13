@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
 import { auth } from '@/services/firebase';
 import {
-  getAllQuotes,
   subscribeToAllQuotes,
   saveManualQuote,
   updateQuote,

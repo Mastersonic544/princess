@@ -7,12 +7,11 @@ import { cn } from '@/lib/utils';
 interface QuoteCardProps {
   card: GeneratedCard;
   isActive: boolean;
-  sessionId: string;
   onLike?: () => void;
   audioUnlocked?: boolean;
 }
 
-export default function QuoteCard({ card, isActive, sessionId, onLike, audioUnlocked = true }: QuoteCardProps) {
+export default function QuoteCard({ card, isActive, onLike, audioUnlocked = true }: QuoteCardProps) {
   const audioRef = useRef<HTMLAudioElement | null>(card.audio);
   const [likeCount, setLikeCount] = useState(card.quote.likes);
   const [hasLiked, setHasLiked] = useState(false);

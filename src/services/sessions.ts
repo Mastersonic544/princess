@@ -100,6 +100,6 @@ export async function getAllSessions(): Promise<Session[]> {
     const snap = await get(ref(db, 'sessions'));
     if (!snap.exists()) return [];
     const sessions: Session[] = [];
-    snap.forEach((child) => sessions.push(child.val() as Session));
+    snap.forEach((child) => { sessions.push(child.val() as Session); });
     return sessions.sort((a, b) => b.startedAt - a.startedAt);
 }

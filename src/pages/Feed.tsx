@@ -207,7 +207,6 @@ export default function Feed() {
                   <QuoteCard
                     card={card}
                     isActive={idx === activeIndex}
-                    sessionId={sessionRef.current?.sessionId ?? ''}
                     onLike={handleLike}
                     audioUnlocked={audioUnlocked}
                   />

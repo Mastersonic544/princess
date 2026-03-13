@@ -1,7 +1,7 @@
 import Groq from 'groq-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { getManualQuotes, saveAIQuote } from './quotes';
-import { FALLBACK_TRACKS, FALLBACK_IMAGES, FALLBACK_QUOTES } from '@/constants/fallbacks';
+import { FALLBACK_IMAGES, FALLBACK_QUOTES } from '@/constants/fallbacks';
 import type { GeneratedCard, GroqQuoteResponse, Quote } from '@/types';
 
 // ─── Groq System Prompt ────────────────────────────────────────────────────────
@@ -46,11 +46,10 @@ OUTPUT FORMAT — always respond with exactly this JSON object, nothing else:
 
 {
   "quote": "the generated quote string",
-  "musicMood": "1–3 word keyword for Jamendo music search",
-  "imageQuery": "2–4 word keyword for Unsplash image search"
+  "imageQuery": "2–4 word keyword for Unsplash image search",
+  "musicMood": "pick one: upbeat, playful, fun, romantic, deep, slow, warm, happy, sweet, longing, late night"
 }
 
-musicMood examples: "lofi romantic", "soft piano", "r&b slow", "ambient ocean", "jazz night"
 imageQuery examples: "couple night city", "ocean stars couple", "hands intertwined warm light", "rain window thinking"
 
 Never add explanation. Never add commentary. Only the JSON.`;
@@ -113,13 +112,21 @@ class CardEngine {
     // ── Alternation Logic ────────────────────────────────────────────────────────
 
     /**
-     * Cards 0–6: manual (first 7 hand-written quotes).
-     * Card 7+: strict alternation — ai, manual, ai, manual...
+     * Cards 0–(N-1): manual (shows all available hand-written quotes first).
+     * Card N+: strict alternation — ai, manual, ai, manual...
      */
     private getNextType(): 'manual' | 'ai' {
         const idx = this.nextCardIndex;
-        if (idx < 7) return 'manual';
-        return (idx - 7) % 2 === 0 ? 'ai' : 'manual';
+        const manualCount = this.manualQuotes.length;
+
+        // Ensure we always start with admin quotes first (play all of them once)
+        if (manualCount > 0 && idx < manualCount) {
+            return 'manual';
+        }
+
+        // If no manual quotes, or we've finished the initial batch, alternate
+        const offsetIdx = manualCount > 0 ? idx - manualCount : idx;
+        return offsetIdx % 2 === 0 ? 'ai' : 'manual';
     }
 
     // ── Main Preload Orchestration ────────────────────────────────────────────────
@@ -161,22 +168,14 @@ class CardEngine {
         this.manualQuoteIndex++;
 
         const imageQuery = quote.imageQuery ?? 'couple romantic light';
-        const musicMood = quote.musicMood ?? 'love song';
 
-        const [imageUrl, track] = await Promise.all([
-            this.fetchImage(imageQuery),
-            this.fetchTrack(musicMood),
-        ]);
-
-        const audio = await this.preloadAudio(track.url);
+        const imageUrl = await this.fetchImage(imageQuery);
 
         return {
             id: quote.id,
             quote,
             imageUrl,
-            trackUrl: track.url,
-            artistName: track.artistName,
-            audio,
+            musicMood: quote.musicMood ?? 'romantic',
             type: 'manual',
         };
     }
@@ -192,7 +191,11 @@ class CardEngine {
         } catch (err) {
             console.error('[CardEngine] Groq failed, using fallback quote:', err);
             const fallback = FALLBACK_QUOTES[Math.floor(Math.random() * FALLBACK_QUOTES.length)];
-            groqResponse = fallback;
+            groqResponse = {
+                quote: fallback.quote,
+                imageQuery: fallback.imageQuery,
+                musicMood: fallback.musicMood
+            };
         }
 
         // Save AI quote to Firebase and get its ID
@@ -200,8 +203,8 @@ class CardEngine {
         try {
             quoteId = await saveAIQuote(
                 groqResponse.quote,
-                groqResponse.musicMood,
-                groqResponse.imageQuery
+                groqResponse.imageQuery,
+                groqResponse.musicMood
             );
         } catch {
             quoteId = uuidv4(); // ephemeral ID if Firebase save fails
@@ -213,25 +216,18 @@ class CardEngine {
             type: 'ai',
             createdAt: Date.now(),
             likes: 0,
-            musicMood: groqResponse.musicMood,
             imageQuery: groqResponse.imageQuery,
+            musicMood: groqResponse.musicMood,
             visible: true,
         };
 
-        const [imageUrl, track] = await Promise.all([
-            this.fetchImage(groqResponse.imageQuery),
-            this.fetchTrack(groqResponse.musicMood),
-        ]);
-
-        const audio = await this.preloadAudio(track.url);
+        const imageUrl = await this.fetchImage(groqResponse.imageQuery);
 
         return {
             id: quoteId,
             quote,
             imageUrl,
-            trackUrl: track.url,
-            artistName: track.artistName,
-            audio,
+            musicMood: groqResponse.musicMood,
             type: 'ai',
         };
     }
@@ -254,7 +250,7 @@ class CardEngine {
         if (!content) throw new Error('Empty Groq response');
 
         const parsed = JSON.parse(content) as Partial<GroqQuoteResponse>;
-        if (!parsed.quote || !parsed.musicMood || !parsed.imageQuery) {
+        if (!parsed.quote || !parsed.imageQuery || !parsed.musicMood) {
             throw new Error('Groq response missing required fields');
         }
         return parsed as GroqQuoteResponse;
@@ -288,75 +284,7 @@ class CardEngine {
         }
     }
 
-    // ── Track Fetching ───────────────────────────────────────────────────────────
 
-    async fetchTrack(mood: string): Promise<{ url: string; artistName: string }> {
-        try {
-            const url = new URL('https://api.jamendo.com/v3.0/tracks/');
-            url.searchParams.set('client_id', import.meta.env.VITE_JAMENDO_CLIENT_ID);
-            url.searchParams.set('format', 'json');
-            url.searchParams.set('limit', '50');
-            url.searchParams.set('tags', 'love,romantic,famous');
-            url.searchParams.set('fuzzytags', mood);
-            url.searchParams.set('audioformat', 'mp32');
-            url.searchParams.set('include', 'musicinfo');
-
-            const res = await fetch(url.toString());
-            if (!res.ok) throw new Error(`Jamendo ${res.status}`);
-
-            const data = (await res.json()) as {
-                results: Array<{ audio: string; artist_name: string }>;
-            };
-
-            if (!data.results || data.results.length === 0) {
-                throw new Error('No Jamendo results');
-            }
-
-            const track = data.results[Math.floor(Math.random() * data.results.length)];
-            return { url: track.audio, artistName: track.artist_name };
-        } catch (err) {
-            console.warn('[CardEngine] Jamendo failed, using fallback:', err);
-            const fallback = FALLBACK_TRACKS[Math.floor(Math.random() * FALLBACK_TRACKS.length)];
-            return fallback;
-        }
-    }
-
-    // ── Audio Preloading ─────────────────────────────────────────────────────────
-
-    async preloadAudio(url: string): Promise<HTMLAudioElement | null> {
-        try {
-            const audio = new Audio();
-            audio.crossOrigin = 'anonymous'; // Important for fetching across origins
-            audio.src = url;
-            audio.volume = 0.4;
-            audio.preload = 'auto';
-
-            // Wait until it actually can play
-            await new Promise<void>((resolve, reject) => {
-                const onCanPlay = () => {
-                   audio.removeEventListener('canplaythrough', onCanPlay);
-                   audio.removeEventListener('error', onError);
-                   resolve();
-                };
-                const onError = () => {
-                   audio.removeEventListener('canplaythrough', onCanPlay);
-                   audio.removeEventListener('error', onError);
-                   reject(new Error('Audio load failed'));
-                };
-
-                audio.addEventListener('canplaythrough', onCanPlay);
-                audio.addEventListener('error', onError);
-                audio.load();
-                
-                // Allow up to 8s for slower connections
-                setTimeout(resolve, 8_000);
-            });
-            return audio;
-        } catch (err) {
-            console.warn('[CardEngine] Audio preload failed:', err);
-            return null;
-        }
-    }
 }
 
 // Singleton instance — shared across the app

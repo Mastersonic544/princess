@@ -7,8 +7,8 @@ export interface Quote {
     type: QuoteType;
     createdAt: number;
     likes: number;
-    musicMood?: string;
     imageQuery?: string;
+    musicMood: string;
     savedBy?: 'user_like';
     visible: boolean;
 }
@@ -36,8 +36,8 @@ export interface Stats {
 /** Raw Groq API response shape */
 export interface GroqQuoteResponse {
     quote: string;
-    musicMood: string;
     imageQuery: string;
+    musicMood: string;
 }
 
 /** A fully assembled card ready for display */
@@ -46,9 +46,7 @@ export interface GeneratedCard {
     id: string;
     quote: Quote;
     imageUrl: string;
-    trackUrl: string;
-    artistName?: string;
-    audio: HTMLAudioElement | null;
+    musicMood: string;
     type: QuoteType;
 }
 

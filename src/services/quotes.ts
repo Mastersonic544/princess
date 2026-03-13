@@ -66,6 +66,7 @@ export async function saveManualQuote(text: string): Promise<string> {
         type: 'manual',
         createdAt: Date.now(),
         likes: 0,
+        musicMood: 'romantic', // Default for hand-written quotes
         visible: true,
     };
     await set(newRef, quote);
@@ -75,8 +76,8 @@ export async function saveManualQuote(text: string): Promise<string> {
 /** Save an AI-generated quote to Firebase (called when card is returned from Groq) */
 export async function saveAIQuote(
     text: string,
-    musicMood: string,
-    imageQuery: string
+    imageQuery: string,
+    musicMood: string
 ): Promise<string> {
     const newRef = push(quotesRef());
     const id = newRef.key!;
@@ -86,8 +87,8 @@ export async function saveAIQuote(
         type: 'ai',
         createdAt: Date.now(),
         likes: 0,
-        musicMood,
         imageQuery,
+        musicMood,
         visible: true,
     };
     await set(newRef, quote);

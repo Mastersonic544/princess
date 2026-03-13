@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import type { GeneratedCard } from '@/types';
 import { likeQuote, markQuoteSavedByReaction } from '@/services/quotes';
 import { incrementLikes, updateLastActive } from '@/services/stats';
@@ -6,31 +6,14 @@ import { cn } from '@/lib/utils';
 
 interface QuoteCardProps {
   card: GeneratedCard;
-  isActive: boolean;
+  isActive: boolean; // Keeping for potential future use or consistency with Feed, but removing use in destructing if it triggers warning
   onLike?: () => void;
-  audioUnlocked?: boolean;
 }
 
-export default function QuoteCard({ card, isActive, onLike, audioUnlocked = true }: QuoteCardProps) {
-  const audioRef = useRef<HTMLAudioElement | null>(card.audio);
+export default function QuoteCard({ card, onLike }: QuoteCardProps) {
   const [likeCount, setLikeCount] = useState(card.quote.likes);
   const [hasLiked, setHasLiked] = useState(false);
   const [tapping, setTapping] = useState(false);
-
-  // ── Audio control ────────────────────────────────────────────────────────────
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    if (isActive && audioUnlocked) {
-      audio.currentTime = 0;
-      audio.play().catch((err) => {
-        console.warn('Playback blocked even with unlock:', err);
-      });
-    } else {
-      audio.pause();
-    }
-    return () => { audio.pause(); };
-  }, [isActive, audioUnlocked]);
 
   // ── Reaction handler ─────────────────────────────────────────────────────────
   const handleLike = useCallback(async () => {
@@ -115,20 +98,6 @@ export default function QuoteCard({ card, isActive, onLike, audioUnlocked = true
           {likeCount}
         </span>
       </div>
-
-      {/* Jamendo artist attribution */}
-      {card.artistName && (
-        <div className="absolute bottom-6 left-4 z-20">
-          <a
-            href={card.trackUrl.includes('jamendo') ? `https://www.jamendo.com/track/${card.trackUrl.split('id=')[1]?.split('&')[0]}` : '#'}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-white/40 hover:text-white/80 hover:underline text-[10px] font-medium tracking-wide transition-colors"
-          >
-            ♪ {card.artistName}
-          </a>
-        </div>
-      )}
 
     </div>
   );

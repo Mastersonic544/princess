@@ -81,6 +81,15 @@ export async function incrementSessionLikes(sessionId: string): Promise<void> {
     });
 }
 
+/** Decrement like count for this session */
+export async function decrementSessionLikes(sessionId: string): Promise<void> {
+    const likeRef = ref(db, `sessions/${sessionId}/likeCount`);
+    const snap = await get(likeRef);
+    await update(ref(db, `sessions/${sessionId}`), {
+        likeCount: Math.max(0, (snap.val() ?? 0) - 1),
+    });
+}
+
 /** Final session update on page unload */
 export async function endSession(sessionId: string, startedAt: number): Promise<void> {
     if (heartbeatTimer) {

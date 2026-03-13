@@ -28,7 +28,17 @@ export async function getManualQuotes(): Promise<Quote[]> {
         const q = child.val() as Quote;
         if (q.visible !== false) quotes.push({ ...q, id: child.key! });
     });
-    return quotes.sort((a, b) => a.createdAt - b.createdAt);
+    const sortedByDate = [...quotes].sort((a, b) => b.createdAt - a.createdAt);
+
+    // Phase 1: Keep the top 5 most recent manual quotes at the very beginning
+    const recentCount = 5;
+    const recent = sortedByDate.slice(0, recentCount);
+    const remaining = sortedByDate.slice(recentCount);
+
+    // Phase 2: Sort the remaining manual quotes by likes
+    const bestOfRemaining = remaining.sort((a, b) => b.likes - a.likes);
+
+    return [...recent, ...bestOfRemaining];
 }
 
 /** Fetch ALL quotes (admin use — requires auth) */
@@ -99,6 +109,12 @@ export async function saveAIQuote(
 export async function likeQuote(id: string): Promise<void> {
     const likesRef = ref(db, `quotes/${id}/likes`);
     await runTransaction(likesRef, (current: number | null) => (current ?? 0) + 1);
+}
+
+/** Decrement likes counter atomically (unlike) */
+export async function unlikeQuote(id: string): Promise<void> {
+    const likesRef = ref(db, `quotes/${id}/likes`);
+    await runTransaction(likesRef, (current: number | null) => Math.max(0, (current ?? 0) - 1));
 }
 
 /** Mark an AI quote as saved via reaction (public write — allowed by rules) */

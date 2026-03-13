@@ -5,6 +5,7 @@ import {
   startSessionHeartbeat,
   incrementSessionScrolls,
   incrementSessionLikes,
+  decrementSessionLikes,
   endSession,
 } from '@/services/sessions';
 import { incrementScrolls, updateLastActive } from '@/services/stats';
@@ -179,9 +180,13 @@ export default function Feed() {
     });
   }, [cards.length]);
 
-  const handleLike = useCallback(() => {
+  const handleLike = useCallback((liked: boolean) => {
     if (sessionRef.current) {
-      void incrementSessionLikes(sessionRef.current.sessionId);
+      if (liked) {
+        void incrementSessionLikes(sessionRef.current.sessionId);
+      } else {
+        void decrementSessionLikes(sessionRef.current.sessionId);
+      }
     }
   }, []);
 

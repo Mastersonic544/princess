@@ -27,6 +27,13 @@ export async function incrementLikes(): Promise<void> {
     await incrementStat('totalLikes');
 }
 
+/** Decrement totalLikes */
+export async function decrementLikes(): Promise<void> {
+    await runTransaction(statFieldRef('totalLikes'), (current: number | null) =>
+        Math.max(0, (current ?? 0) - 1)
+    );
+}
+
 /** Add seconds to totalHoursScrolled (converted from seconds) */
 export async function addScrolledTime(seconds: number): Promise<void> {
     const hoursRef = statFieldRef('totalHoursScrolled');

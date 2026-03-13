@@ -1,13 +1,13 @@
 import { useState, useCallback } from 'react';
 import type { GeneratedCard } from '@/types';
-import { likeQuote, markQuoteSavedByReaction } from '@/services/quotes';
-import { incrementLikes, updateLastActive } from '@/services/stats';
+import { likeQuote, unlikeQuote, markQuoteSavedByReaction } from '@/services/quotes';
+import { incrementLikes, decrementLikes, updateLastActive } from '@/services/stats';
 import { cn } from '@/lib/utils';
 
 interface QuoteCardProps {
   card: GeneratedCard;
   isActive: boolean; // Keeping for potential future use or consistency with Feed, but removing use in destructing if it triggers warning
-  onLike?: () => void;
+  onLike?: (liked: boolean) => void;
 }
 
 export default function QuoteCard({ card, onLike }: QuoteCardProps) {
@@ -17,25 +17,38 @@ export default function QuoteCard({ card, onLike }: QuoteCardProps) {
 
   // ── Reaction handler ─────────────────────────────────────────────────────────
   const handleLike = useCallback(async () => {
-    if (hasLiked) return;
-    setHasLiked(true);
-    setLikeCount((c) => c + 1);
-    setTapping(true);
-    // Tapping state for the central pop animation
-    setTimeout(() => setTapping(false), 800);
+    const isLiking = !hasLiked;
+    
+    // Optimistic UI update
+    setHasLiked(isLiking);
+    setLikeCount((c) => isLiking ? c + 1 : c - 1);
+    
+    if (isLiking) {
+      setTapping(true);
+      // Tapping state for the central pop animation
+      setTimeout(() => setTapping(false), 800);
+    }
 
     try {
-      await likeQuote(card.quote.id);
-      if (card.quote.type === 'ai') {
-        await markQuoteSavedByReaction(card.quote.id);
+      if (isLiking) {
+        await likeQuote(card.quote.id);
+        if (card.quote.type === 'ai') {
+          await markQuoteSavedByReaction(card.quote.id);
+        }
+        await incrementLikes();
+      } else {
+        await unlikeQuote(card.quote.id);
+        await decrementLikes();
       }
-      await incrementLikes();
+      
       await updateLastActive();
-      // Notify parent (increments session like count)
-      onLike?.();
+      // Notify parent (adjusts session like count)
+      onLike?.(isLiking);
     } catch (err) {
-      console.error('[QuoteCard] Like failed:', err);
-      // Optimistic UI stays — don't revert
+      console.error('[QuoteCard] Like/Unlike failed:', err);
+      // Revert optimistic UI on failure
+      setHasLiked(!isLiking);
+      setLikeCount((c) => isLiking ? c - 1 : c + 1);
     }
   }, [card.quote.id, card.quote.type, hasLiked, onLike]);
 

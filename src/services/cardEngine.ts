@@ -161,7 +161,7 @@ class CardEngine {
         this.manualQuoteIndex++;
 
         const imageQuery = quote.imageQuery ?? 'couple romantic light';
-        const musicMood = quote.musicMood ?? 'soft piano';
+        const musicMood = quote.musicMood ?? 'love song';
 
         const [imageUrl, track] = await Promise.all([
             this.fetchImage(imageQuery),
@@ -295,8 +295,9 @@ class CardEngine {
             const url = new URL('https://api.jamendo.com/v3.0/tracks/');
             url.searchParams.set('client_id', import.meta.env.VITE_JAMENDO_CLIENT_ID);
             url.searchParams.set('format', 'json');
-            url.searchParams.set('limit', '5');
-            url.searchParams.set('tags', mood);
+            url.searchParams.set('limit', '50');
+            url.searchParams.set('tags', 'love,romantic,famous');
+            url.searchParams.set('fuzzytags', mood);
             url.searchParams.set('audioformat', 'mp32');
             url.searchParams.set('include', 'musicinfo');
 
@@ -324,16 +325,31 @@ class CardEngine {
 
     async preloadAudio(url: string): Promise<HTMLAudioElement | null> {
         try {
-            const audio = new Audio(url);
+            const audio = new Audio();
+            audio.crossOrigin = 'anonymous'; // Important for fetching across origins
+            audio.src = url;
             audio.volume = 0.4;
             audio.preload = 'auto';
-            // Begin buffering without playing
+
+            // Wait until it actually can play
             await new Promise<void>((resolve, reject) => {
-                audio.addEventListener('canplaythrough', () => resolve(), { once: true });
-                audio.addEventListener('error', () => reject(new Error('Audio load failed')), { once: true });
+                const onCanPlay = () => {
+                   audio.removeEventListener('canplaythrough', onCanPlay);
+                   audio.removeEventListener('error', onError);
+                   resolve();
+                };
+                const onError = () => {
+                   audio.removeEventListener('canplaythrough', onCanPlay);
+                   audio.removeEventListener('error', onError);
+                   reject(new Error('Audio load failed'));
+                };
+
+                audio.addEventListener('canplaythrough', onCanPlay);
+                audio.addEventListener('error', onError);
                 audio.load();
-                // Don't hang forever waiting for buffering on slow connections
-                setTimeout(resolve, 5_000);
+                
+                // Allow up to 8s for slower connections
+                setTimeout(resolve, 8_000);
             });
             return audio;
         } catch (err) {

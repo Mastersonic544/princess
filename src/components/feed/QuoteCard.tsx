@@ -131,19 +131,6 @@ export default function QuoteCard({ card, isActive, sessionId, onLike, audioUnlo
         </div>
       )}
 
-      {/* Subtle card type badge (top-right, very subtle) */}
-      <div className="absolute top-4 right-4 z-10">
-        <span
-          className={cn(
-            'text-[10px] font-medium px-2 py-0.5 rounded-full uppercase tracking-widest',
-            isManual
-              ? 'bg-blue-500/20 text-blue-300'
-              : 'bg-red-500/20 text-red-300'
-          )}
-        >
-          {isManual ? 'from him' : 'ai'}
-        </span>
-      </div>
     </div>
   );
 }

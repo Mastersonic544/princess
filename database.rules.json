@@ -2,7 +2,8 @@
     "rules": {
         "quotes": {
             ".read": true,
-            ".write": "auth !== null",
+            ".write": true,
+            ".indexOn": "type",
             "$quoteId": {
                 ".validate": "newData.hasChildren(['text', 'type', 'createdAt', 'likes', 'visible'])",
                 "likes": {
@@ -16,10 +17,20 @@
             }
         },
         "sessions": {
+            ".read": "auth !== null",
             "$sessionId": {
-                ".read": "auth !== null",
+                ".read": true,
                 ".write": true,
-                ".validate": "newData.hasChildren(['sessionId', 'startedAt', 'lastSeen']) && newData.child('sessionId').isString() && newData.child('startedAt').isNumber() && newData.child('lastSeen').isNumber()",
+                ".validate": "newData.hasChildren(['sessionId', 'startedAt', 'lastSeen'])",
+                "sessionId": {
+                    ".validate": "newData.isString()"
+                },
+                "startedAt": {
+                    ".validate": "newData.isNumber()"
+                },
+                "lastSeen": {
+                    ".validate": "newData.isNumber()"
+                },
                 "scrollCount": {
                     ".validate": "!newData.exists() || newData.isNumber()"
                 },

@@ -214,7 +214,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <KpiCard label="Total Users" value={stats?.totalUsers ?? '—'} />
               <KpiCard label="Active Now" value={stats?.activeUsers ?? '—'} />
-              <KpiCard label="Hours Scrolled" value={stats ? stats.totalHoursScrolled.toFixed(1) + 'h' : '—'} />
+              <KpiCard label="Hours Scrolled" value={stats && stats.totalHoursScrolled !== undefined ? stats.totalHoursScrolled.toFixed(1) + 'h' : '—'} />
               <KpiCard label="Total 🫠" value={stats?.totalLikes ?? '—'} />
               <KpiCard label="Total Scrolls" value={stats?.totalScrolls ?? '—'} />
               <KpiCard label="Quotes Loaded" value={quotes.length} />

@@ -11,7 +11,7 @@ import {
 import { incrementScrolls, updateLastActive } from '@/services/stats';
 import QuoteCard from '@/components/feed/QuoteCard';
 import LoadingSkeleton from '@/components/feed/LoadingSkeleton';
-import SplashScreen from '@/components/feed/SplashScreen';
+import SplashScreen from '../components/feed/SplashScreen';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import type { GeneratedCard, SessionInfo } from '@/types';
 

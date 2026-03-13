@@ -176,8 +176,7 @@ export default function Dashboard() {
       {/* Header */}
       <header className="sticky top-0 z-20 bg-black/90 backdrop-blur border-b border-white/10 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-lg">👑</span>
-          <span className="text-white/60 text-sm font-medium">princess admin</span>
+          <span className="text-white/60 text-sm font-black uppercase italic tracking-tighter">PrincessTok admin</span>
         </div>
         <button
           onClick={handleLogout}

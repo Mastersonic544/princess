@@ -11,6 +11,7 @@ import {
 import { incrementScrolls, updateLastActive } from '@/services/stats';
 import QuoteCard from '@/components/feed/QuoteCard';
 import LoadingSkeleton from '@/components/feed/LoadingSkeleton';
+import SplashScreen from '@/components/feed/SplashScreen';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import type { GeneratedCard, SessionInfo } from '@/types';
 
@@ -66,6 +67,7 @@ const MIN_QUEUE_AHEAD = 2;
 export default function Feed() {
   const [cards, setCards] = useState<(GeneratedCard | null)[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [showSplash, setShowSplash] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const sessionRef = useRef<SessionInfo | null>(null);
   const isLoadingRef = useRef(false);
@@ -91,6 +93,9 @@ export default function Feed() {
         initial.push(cardEngine.dequeue());
       }
       setCards(initial.filter(Boolean) as GeneratedCard[]);
+      
+      // Delay dismissing splash slightly for premium feel
+      setTimeout(() => setShowSplash(false), 1500);
     }
 
     setup().catch(console.error);
@@ -193,6 +198,8 @@ export default function Feed() {
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
+      {showSplash && <SplashScreen />}
+      
       <div ref={containerRef} className="feed-container relative">
         {cards.length === 0 ? (
           <>

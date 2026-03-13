@@ -30,8 +30,10 @@ export default function AdminLogin() {
       <div className="w-full max-w-sm space-y-8">
         {/* Header */}
         <div className="text-center space-y-1">
-          <div className="text-4xl mb-4">👑</div>
-          <h1 className="text-white text-xl font-medium tracking-wide">admin</h1>
+          <h1 className="text-white text-3xl font-black tracking-tighter uppercase italic tiktok-glitch mb-2">
+            PrincessTok
+          </h1>
+          <h2 className="text-white text-xl font-medium tracking-wide">admin</h2>
           <p className="text-white/30 text-sm">not for everyone</p>
         </div>
 

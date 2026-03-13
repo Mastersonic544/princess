@@ -158,4 +158,41 @@
   .heart-button:active {
     transform: scale(0.8);
   }
+
+  /* TikTok Pulse & Glitch */
+  .tiktok-pulse {
+    animation: tiktok-pulse 1.2s infinite ease-in-out;
+  }
+
+  @keyframes tiktok-pulse {
+
+    0%,
+    100% {
+      transform: scale(1);
+    }
+
+    50% {
+      transform: scale(1.05);
+    }
+  }
+
+  .tiktok-glitch {
+    position: relative;
+    color: white;
+    text-shadow:
+      -2px 0 #00f2ea,
+      2px 0 #ff0050;
+    letter-spacing: -0.05em;
+  }
+
+  .splash-fade-out {
+    animation: splashFadeOut 0.5s ease-out forwards;
+  }
+
+  @keyframes splashFadeOut {
+    to {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
 }

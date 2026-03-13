@@ -116,17 +116,16 @@ class CardEngine {
      * Card N+: strict alternation — ai, manual, ai, manual...
      */
     private getNextType(): 'manual' | 'ai' {
-        const idx = this.nextCardIndex;
         const manualCount = this.manualQuotes.length;
 
         // Ensure we always start with admin quotes first (play all of them once)
-        if (manualCount > 0 && idx < manualCount) {
+        if (manualCount > 0 && this.manualQuoteIndex < manualCount) {
             return 'manual';
         }
 
-        // If no manual quotes, or we've finished the initial batch, alternate
-        const offsetIdx = manualCount > 0 ? idx - manualCount : idx;
-        return offsetIdx % 2 === 0 ? 'ai' : 'manual';
+        // Once manual pool is exhausted, switch primarily to AI
+        // We can still weave them in if repeats were allowed, but the user said "no need to load it again"
+        return 'ai';
     }
 
     // ── Main Preload Orchestration ────────────────────────────────────────────────
@@ -159,12 +158,12 @@ class CardEngine {
     // ── Manual Card Generation ───────────────────────────────────────────────────
 
     private async generateManualCard(): Promise<GeneratedCard | null> {
-        if (this.manualQuotes.length === 0) {
-            // No manual quotes loaded — fall back to AI
+        if (this.manualQuotes.length === 0 || this.manualQuoteIndex >= this.manualQuotes.length) {
+            // No manual quotes left — fall back to AI
             return this.generateAICard();
         }
 
-        const quote = this.manualQuotes[this.manualQuoteIndex % this.manualQuotes.length];
+        const quote = this.manualQuotes[this.manualQuoteIndex];
         this.manualQuoteIndex++;
 
         const imageQuery = quote.imageQuery ?? 'couple romantic light';

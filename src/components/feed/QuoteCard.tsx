@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import type { GeneratedCard } from '@/types';
 import { likeQuote, unlikeQuote, markQuoteSavedByReaction } from '@/services/quotes';
 import { incrementLikes, decrementLikes, updateLastActive } from '@/services/stats';
@@ -14,11 +14,22 @@ export default function QuoteCard({ card, onLike }: QuoteCardProps) {
   const [likeCount, setLikeCount] = useState(card.quote.likes);
   const [hasLiked, setHasLiked] = useState(false);
   const [tapping, setTapping] = useState(false);
+  const lastTapRef = useRef<number>(0);
 
   // ── Reaction handler ─────────────────────────────────────────────────────────
-  const handleLike = useCallback(async () => {
-    const isLiking = !hasLiked;
+  const handleLike = useCallback(async (forceLike: boolean = false) => {
+    // If we're forcing a like (double tap) and already liked, just show the animation
+    if (forceLike && hasLiked) {
+      setTapping(true);
+      setTimeout(() => setTapping(false), 800);
+      return;
+    }
+
+    const isLiking = forceLike ? true : !hasLiked;
     
+    // If we're already in the desired state, do nothing (e.g. double tap on already liked)
+    if (isLiking === hasLiked && !forceLike) return;
+
     // Optimistic UI update
     setHasLiked(isLiking);
     setLikeCount((c) => isLiking ? c + 1 : c - 1);
@@ -52,12 +63,25 @@ export default function QuoteCard({ card, onLike }: QuoteCardProps) {
     }
   }, [card.quote.id, card.quote.type, hasLiked, onLike]);
 
+  const handleCardClick = useCallback(() => {
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300;
+    
+    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+      // Double tap detected
+      void handleLike(true);
+    }
+    
+    lastTapRef.current = now;
+  }, [handleLike]);
+
   // ── Render ───────────────────────────────────────────────────────────────────
   const isManual = card.type === 'manual';
 
   return (
     <div
-      className="feed-card-snap animate-fade-in"
+      className="feed-card-snap animate-fade-in relative transition-all"
+      onClick={handleCardClick}
       style={{
         backgroundImage: `url(${card.imageUrl})`,
         backgroundSize: 'cover',
@@ -112,7 +136,10 @@ export default function QuoteCard({ card, onLike }: QuoteCardProps) {
       {/* Reaction button */}
       <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1">
         <button
-          onClick={handleLike}
+          onClick={(e) => {
+            e.stopPropagation(); // Don't trigger card double-tap
+            void handleLike(false);
+          }}
           aria-label="Like"
           className={cn(
             'heart-button p-2 select-none touch-manipulation',

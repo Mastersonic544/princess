@@ -10,6 +10,8 @@ export default function SplashScreen({ isReady, onDismiss, isFadingOut }: Splash
   return (
     <div 
       onClick={isReady ? onDismiss : undefined}
+      onWheel={isReady ? onDismiss : undefined}
+      onTouchMove={isReady ? onDismiss : undefined}
       className={cn(
         "fixed inset-0 z-[100] bg-[#010101] flex flex-col items-center justify-center transition-opacity duration-500",
         isFadingOut && "opacity-0 pointer-events-none"

@@ -68,6 +68,8 @@ export default function Feed() {
   const [cards, setCards] = useState<(GeneratedCard | null)[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [showSplash, setShowSplash] = useState(true);
+  const [isReady, setIsReady] = useState(false);
+  const [isFadingOut, setIsFadingOut] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const sessionRef = useRef<SessionInfo | null>(null);
   const isLoadingRef = useRef(false);
@@ -93,9 +95,7 @@ export default function Feed() {
         initial.push(cardEngine.dequeue());
       }
       setCards(initial.filter(Boolean) as GeneratedCard[]);
-      
-      // Delay dismissing splash slightly for premium feel
-      setTimeout(() => setShowSplash(false), 1500);
+      setIsReady(true);
     }
 
     setup().catch(console.error);
@@ -195,12 +195,30 @@ export default function Feed() {
     }
   }, []);
 
+  const dismissSplash = useCallback(() => {
+    if (!isReady || isFadingOut) return;
+    setIsFadingOut(true);
+    // Remove from DOM after transition
+    setTimeout(() => setShowSplash(false), 500);
+  }, [isReady, isFadingOut]);
+
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
-      {showSplash && <SplashScreen />}
+      {showSplash && (
+        <SplashScreen 
+          isReady={isReady} 
+          onDismiss={dismissSplash} 
+          isFadingOut={isFadingOut}
+        />
+      )}
       
-      <div ref={containerRef} className="feed-container relative">
+      <div 
+        ref={containerRef} 
+        className="feed-container relative"
+        onWheel={dismissSplash}
+        onTouchStart={dismissSplash}
+      >
         {cards.length === 0 ? (
           <>
             <LoadingSkeleton />

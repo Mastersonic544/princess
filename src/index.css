@@ -195,4 +195,26 @@
       visibility: hidden;
     }
   }
+
+  /* Bouncy Swipe Animation */
+  .swipe-bounce {
+    animation: swipe-bounce 2s infinite ease-in-out;
+  }
+
+  @keyframes swipe-bounce {
+
+    0%,
+    100%,
+    20% {
+      transform: translateY(0);
+    }
+
+    40% {
+      transform: translateY(-10px);
+    }
+
+    60% {
+      transform: translateY(-5px);
+    }
+  }
 }

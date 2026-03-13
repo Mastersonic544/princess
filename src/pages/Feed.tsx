@@ -11,7 +11,6 @@ import { incrementScrolls, updateLastActive } from '@/services/stats';
 import QuoteCard from '@/components/feed/QuoteCard';
 import LoadingSkeleton from '@/components/feed/LoadingSkeleton';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { useMusicPlayer } from '@/components/MusicPlayer';
 import type { GeneratedCard, SessionInfo } from '@/types';
 
 /** AdSense banner — injected once globally at bottom of viewport */
@@ -66,12 +65,10 @@ const MIN_QUEUE_AHEAD = 2;
 export default function Feed() {
   const [cards, setCards] = useState<(GeneratedCard | null)[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const sessionRef = useRef<SessionInfo | null>(null);
   const isLoadingRef = useRef(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
-  const { playTrack } = useMusicPlayer();
 
   // ── Initialize on mount ───────────────────────────────────────────────────
   useEffect(() => {
@@ -148,10 +145,6 @@ export default function Feed() {
               if (idx >= prev.length - 2) {
                 void maybePreload();
               }
-              const currentCard = prev[idx];
-              if (currentCard && hasUserInteracted) {
-                playTrack(currentCard.musicMood);
-              }
               return prev;
             });
 
@@ -170,7 +163,7 @@ export default function Feed() {
     return () => {
       observerRef.current?.disconnect();
     };
-  }, [maybePreload, hasUserInteracted, playTrack]);
+  }, [maybePreload]);
 
   // Connect observer to new cards as they arrive
   useEffect(() => {
@@ -190,16 +183,7 @@ export default function Feed() {
     if (sessionRef.current) {
       void incrementSessionLikes(sessionRef.current.sessionId);
     }
-    
-    // Unlock music on first interaction
-    if (!hasUserInteracted) {
-      setHasUserInteracted(true);
-      const currentCard = cards[activeIndex];
-      if (currentCard) {
-        playTrack(currentCard.musicMood);
-      }
-    }
-  }, [activeIndex, cards, hasUserInteracted, playTrack]);
+  }, []);
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -218,16 +202,7 @@ export default function Feed() {
                 key={card.id}
                 fallback={<LoadingSkeleton />}
               >
-                <div data-card-index={idx} className="relative">
-                  {/* Music unlock hint - only on first card, before first interaction */}
-                  {idx === 0 && !hasUserInteracted && (
-                    <div className="absolute top-12 left-0 right-0 z-20 flex flex-col items-center pointer-events-none animate-fade-in">
-                      <div className="music-pulse text-2xl mb-1">🎵</div>
-                      <div className="text-white/80 text-xs font-medium uppercase tracking-widest bg-black/20 px-3 py-1 rounded-full backdrop-blur-sm">
-                        tap 🫠 to start music
-                      </div>
-                    </div>
-                  )}
+                <div data-card-index={idx}>
                   <QuoteCard
                     card={card}
                     isActive={idx === activeIndex}

@@ -4,7 +4,6 @@ import AdminLogin from '@/pages/admin/Login';
 import AdminDashboard from '@/pages/admin/Dashboard';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { MusicPlayerProvider, MusicPlayer, useMusicPlayer } from '@/components/MusicPlayer';
 
 export default function App() {
   return (
@@ -14,19 +13,6 @@ export default function App() {
         v7_relativeSplatPath: true,
       }}
     >
-      <MusicPlayerProvider>
-        <AppContent />
-      </MusicPlayerProvider>
-    </BrowserRouter>
-  );
-}
-
-function AppContent() {
-  const { currentTrack } = useMusicPlayer();
-
-  return (
-    <>
-      <MusicPlayer videoId={currentTrack?.id ?? null} />
       <Routes>
         {/* Public feed */}
         <Route
@@ -54,6 +40,6 @@ function AppContent() {
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </>
+    </BrowserRouter>
   );
 }

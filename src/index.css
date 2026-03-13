@@ -128,22 +128,34 @@
     box-shadow: 0 0 20px rgba(236, 72, 153, 0.3);
   }
 
-  /* Music note pulse */
-  .music-pulse {
-    animation: musicPulse 2s infinite ease-in-out;
+  /* Heart pop animation */
+  .heart-pop {
+    animation: heartPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
   }
 
-  @keyframes musicPulse {
-
-    0%,
-    100% {
-      transform: scale(1);
-      opacity: 0.8;
+  @keyframes heartPop {
+    0% {
+      transform: scale(0);
+      opacity: 0;
     }
 
-    50% {
-      transform: scale(1.2);
+    45% {
+      transform: scale(1.4);
       opacity: 1;
     }
+
+    100% {
+      transform: scale(1.2);
+      opacity: 0;
+    }
+  }
+
+  /* Heart button styles */
+  .heart-button {
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .heart-button:active {
+    transform: scale(0.8);
   }
 }
